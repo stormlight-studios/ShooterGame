@@ -1117,9 +1117,9 @@ void AShooterCharacter::Tick(float DeltaSeconds)
 	const uint32 UniqueID = GetUniqueID();
 	FAudioThread::RunCommandOnAudioThread([UniqueID, bLocallyControlled]()
 	{
-		USoundNodeLocalPlayer::GetLocallyControlledActorCache().Add(UniqueID, bLocallyControlled);
+	    USoundNodeLocalPlayer::GetLocallyControlledActorCache().Add(UniqueID, bLocallyControlled);
 	});
-
+	
 	TArray<FVector> PointsToTest;
 	BuildPauseReplicationCheckPoints(PointsToTest);
 
@@ -1323,7 +1323,7 @@ void AShooterCharacter::BuildPauseReplicationCheckPoints(TArray<FVector>& Releva
 
 void AShooterCharacter::CheckTeleportinput()
 {
-	if (bPressedTeleport && CanTeleport())
+	if(bPressedTeleport && CanTeleport())
 	{
 		UShooterCharacterMovement* ShooterCharacterMovement = Cast<UShooterCharacterMovement>(GetCharacterMovement());
 		bWasTeleporting = ShooterCharacterMovement->DoTeleport();
@@ -1334,6 +1334,6 @@ void AShooterCharacter::CheckTeleportinput()
 bool AShooterCharacter::CanTeleport()
 {
 	//return !bWasTeleporting && !GetCharacterMovement()->IsFalling() example.
-
+	
 	return !bWasTeleporting;
 }

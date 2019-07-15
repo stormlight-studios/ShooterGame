@@ -36,7 +36,7 @@ float UShooterCharacterMovement::GetMaxSpeed() const
 bool UShooterCharacterMovement::DoTeleport()
 {
 	AShooterPlayerController* PC = Cast<AShooterPlayerController>(CharacterOwner->Controller);
-
+	
 	bool bWasTeleporting = false;
 
 	if (PC)
@@ -94,13 +94,13 @@ void UShooterCharacterMovement::PerformMovement(float DeltaSeconds)
 void UShooterCharacterMovement::UpdateFromCompressedFlags(uint8 Flags)
 {
 	Super::UpdateFromCompressedFlags(Flags);
-
+	
 	AShooterCharacter* ShooterCharacterOwner = Cast<AShooterCharacter>(PawnOwner);
 
 	if (ShooterCharacterOwner)
 	{
 		ShooterCharacterOwner->bPressedTeleport = ((Flags & FSavedMove_Character::FLAG_Custom_0) != 0);
-
+		
 		if (!ShooterCharacterOwner->bPressedTeleport)
 		{
 			ShooterCharacterOwner->bWasTeleporting = false;
@@ -110,3 +110,80 @@ void UShooterCharacterMovement::UpdateFromCompressedFlags(uint8 Flags)
 	}
 }
 
+
+class FNetworkPredictionData_Client* UShooterCharacterMovement::GetPredictionData_Client() const
+{
+	if (!ClientPredictionData)
+	{
+		UShooterCharacterMovement* MutableThis = const_cast<UShooterCharacterMovement*>(this);
+		MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_ShooterCharacter(*this);
+	}
+
+	return ClientPredictionData;
+}
+
+void FSavedMove_ShooterCharacter::Clear()
+{
+	Super::Clear();
+	bPressedTeleport = false;
+}
+
+uint8 FSavedMove_ShooterCharacter::GetCompressedFlags() const
+{
+	uint8 Result = 0;
+
+	if (bPressedJump)
+	{
+		Result |= FLAG_JumpPressed;
+	}
+
+	if (bWantsToCrouch)
+	{
+		Result |= FLAG_WantsToCrouch;
+	}
+
+	if (bPressedTeleport)
+	{
+		Result |= FLAG_Custom_0;
+	}
+
+	return Result;
+}
+
+bool FSavedMove_ShooterCharacter::CanCombineWith(const FSavedMovePtr& NewMove, ACharacter* Character, float MaxDelta) const
+{
+	return !(bPressedTeleport != ((FSavedMove_ShooterCharacter*)&NewMove)->bPressedTeleport) ? Super::CanCombineWith(NewMove, Character, MaxDelta) : false;
+}
+
+void FSavedMove_ShooterCharacter::SetMoveFor(ACharacter* Character, float InDeltaTime, FVector const& NewAccel, class FNetworkPredictionData_Client_Character & ClientData)
+{
+	Super::SetMoveFor(Character, InDeltaTime, NewAccel, ClientData);
+	AShooterCharacter* ShooterCharcter = Cast<AShooterCharacter>(Character);
+	if (ShooterCharcter)
+	{
+		bPressedTeleport = ShooterCharcter->bPressedTeleport;
+	}
+}
+
+void FSavedMove_ShooterCharacter::PrepMoveFor(class ACharacter* Character)
+{
+	Super::PrepMoveFor(Character);
+	AShooterCharacter* ShooterCharcter = Cast<AShooterCharacter>(Character);
+	if (ShooterCharcter)
+	{
+		ShooterCharcter->bPressedTeleport = bPressedTeleport;
+	}
+}
+
+FNetworkPredictionData_Client_ShooterCharacter::FNetworkPredictionData_Client_ShooterCharacter(const UShooterCharacterMovement& ChracterMovement): Super(ChracterMovement)
+{
+}
+
+FNetworkPredictionData_Client_ShooterCharacter::~FNetworkPredictionData_Client_ShooterCharacter()
+{
+}
+
+FSavedMovePtr FNetworkPredictionData_Client_ShooterCharacter::AllocateNewMove()
+{
+	return FSavedMovePtr(new FSavedMove_ShooterCharacter());
+}
