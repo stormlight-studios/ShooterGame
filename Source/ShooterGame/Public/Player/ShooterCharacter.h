@@ -194,6 +194,12 @@ class AShooterCharacter : public ACharacter
 	/** player released run action */
 	void OnStopRunning();
 
+	/** player pressed Teleport action */
+	void OnTeleport();
+
+	/** player release Teleport action */
+	void OnReleaseTeleport();
+
 	//////////////////////////////////////////////////////////////////////////
 	// Reading data
 
@@ -382,6 +388,7 @@ protected:
 	/** Responsible for cleaning up bodies on clients. */
 	virtual void TornOff();
 
+
 private:
 
 	/** Whether or not the character is moving (based on movement input). */
@@ -391,6 +398,12 @@ private:
 	// Damage & death
 
 public:
+
+	UPROPERTY(BlueprintReadOnly, Category = Character)
+	uint32 bPressedTeleport : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = Character)
+	uint32 bWasTeleporting : 1;
 
 	/** Identifies if pawn is in its dying state */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Health)
@@ -478,6 +491,13 @@ protected:
 protected:
 	/** Returns Mesh1P subobject **/
 	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
+public:
+	/*check if you can execute the action of teleport*/
+	virtual void CheckTeleportinput();
+
+	/* check multiple special conditions*/
+	virtual bool CanTeleport();
 };
 
 

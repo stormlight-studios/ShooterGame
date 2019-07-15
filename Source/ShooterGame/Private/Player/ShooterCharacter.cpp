@@ -874,6 +874,9 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AShooterCharacter::OnStartRunning);
 	PlayerInputComponent->BindAction("RunToggle", IE_Pressed, this, &AShooterCharacter::OnStartRunningToggle);
 	PlayerInputComponent->BindAction("Run", IE_Released, this, &AShooterCharacter::OnStopRunning);
+
+	PlayerInputComponent->BindAction("Teleport", IE_Pressed, this, &AShooterCharacter::OnTeleport);
+	PlayerInputComponent->BindAction("Teleport", IE_Released, this, &AShooterCharacter::OnReleaseTeleport);
 }
 
 
@@ -1034,6 +1037,22 @@ void AShooterCharacter::OnStopRunning()
 	SetRunning(false, false);
 }
 
+void AShooterCharacter::OnTeleport()
+{
+	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+	if (MyPC && MyPC->IsGameInputAllowed())
+	{
+		bPressedTeleport = true;
+	}
+}
+
+void AShooterCharacter::OnReleaseTeleport()
+{
+	bPressedTeleport = false;
+	bWasTeleporting = false;
+}
+
+
 bool AShooterCharacter::IsRunning() const
 {
 	if (!GetCharacterMovement())
@@ -1098,9 +1117,9 @@ void AShooterCharacter::Tick(float DeltaSeconds)
 	const uint32 UniqueID = GetUniqueID();
 	FAudioThread::RunCommandOnAudioThread([UniqueID, bLocallyControlled]()
 	{
-	    USoundNodeLocalPlayer::GetLocallyControlledActorCache().Add(UniqueID, bLocallyControlled);
+		USoundNodeLocalPlayer::GetLocallyControlledActorCache().Add(UniqueID, bLocallyControlled);
 	});
-	
+
 	TArray<FVector> PointsToTest;
 	BuildPauseReplicationCheckPoints(PointsToTest);
 
@@ -1300,4 +1319,21 @@ void AShooterCharacter::BuildPauseReplicationCheckPoints(TArray<FVector>& Releva
 	RelevancyCheckPoints.Add(FVector(BoundingBox.Max.X, BoundingBox.Max.Y - YDiff, BoundingBox.Max.Z));
 	RelevancyCheckPoints.Add(FVector(BoundingBox.Max.X - XDiff, BoundingBox.Max.Y - YDiff, BoundingBox.Max.Z));
 	RelevancyCheckPoints.Add(BoundingBox.Max);
+}
+
+void AShooterCharacter::CheckTeleportinput()
+{
+	if (bPressedTeleport && CanTeleport())
+	{
+		UShooterCharacterMovement* ShooterCharacterMovement = Cast<UShooterCharacterMovement>(GetCharacterMovement());
+		bWasTeleporting = ShooterCharacterMovement->DoTeleport();
+	}
+}
+
+/* This function is to add future restriction conditions to our teleport ability */
+bool AShooterCharacter::CanTeleport()
+{
+	//return !bWasTeleporting && !GetCharacterMovement()->IsFalling() example.
+
+	return !bWasTeleporting;
 }
