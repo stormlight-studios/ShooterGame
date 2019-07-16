@@ -43,7 +43,7 @@ bool UShooterCharacterMovement::DoTeleport()
 	{
 		/* Necessary variables to execute the LineTraceSingleByChannel.
 		 * @StartTrace : Ray starting point.
-		 * @StartTrace : Ray ending point, only when a collision is not detected otherwise we will use hit.ImpactPoint.
+		 * @EndTrace : Ray ending point, only when a collision is not detected otherwise we will use hit.ImpactPoint.
 		 * @CameraRotation: camera rotation, in this case we are going to use PlayerController (GetPlayerViewPoint) to get this value.
 		 * @ForwardVector : direction that is straight in front of the actor
 		 */
@@ -86,7 +86,7 @@ bool UShooterCharacterMovement::DoTeleport()
 void UShooterCharacterMovement::PerformMovement(float DeltaSeconds)
 {
 	AShooterCharacter* ShooterCharacterOwner = Cast<AShooterCharacter>(PawnOwner);
-	ShooterCharacterOwner->CheckTeleportinput();
+	ShooterCharacterOwner->AttemptTeleport();
 
 	Super::PerformMovement(DeltaSeconds);
 }
@@ -106,7 +106,7 @@ void UShooterCharacterMovement::UpdateFromCompressedFlags(uint8 Flags)
 			ShooterCharacterOwner->bWasTeleporting = false;
 		}
 
-		ShooterCharacterOwner->CheckTeleportinput();
+		ShooterCharacterOwner->AttemptTeleport();
 	}
 }
 

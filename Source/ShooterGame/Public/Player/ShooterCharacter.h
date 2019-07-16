@@ -493,10 +493,10 @@ protected:
 	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
 public:
-	/*check if you can execute the action of teleport*/
-	virtual void CheckTeleportinput();
+	/** Checks if the character is trying to Teleport and if it's able to, and calls to execute the ability if so */
+	virtual void AttemptTeleport();
 
-	/* check multiple special conditions*/
+	/** Returns true if the character is not currently under any restrictions to use the Teleport ability */
 	virtual bool CanTeleport();
 };
 

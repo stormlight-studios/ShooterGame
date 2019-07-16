@@ -12,46 +12,42 @@ class UShooterCharacterMovement : public UCharacterMovementComponent
 {
 	GENERATED_UCLASS_BODY()
 
-	/** Distance to teleport ( in meters ) */
+	/* Distance (in meters) that a Teleport travels */
 	UPROPERTY(Category = "Character Movement: Teleport ", EditAnywhere, BlueprintReadOnly)
 	float DistanceToTeleport = 10.0f;
 	
 	virtual float GetMaxSpeed() const override;
 
-	/* Do Teleport */
+	/* Executes the Teleport ability */
 	virtual bool DoTeleport();
 
-	/* If you look at the order of events for CharacterMovementComponent, you'll see that this function is the first thing
-	 * called for both client and server when performing movement. We use it as a good place to capture the previous
-	 * sprinting state. */
+	/* This override extends UCharacterMovementComponent::PerformMovement to include the triggering of our Teleport ability */
 	virtual void PerformMovement(float DeltaSeconds) override;
 
-	/* Read the state flags provided by CompressedFlags and trigger the ability on the server */
+	/* Unpack and process flags from an FSavedMove_ShooterCharacter so that the server knows to trigger the Teleport ability */
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 
-	/* A necessary override to make sure that our custom FNetworkPredictionData defined below is used */
+	/* Required so that FNetworkPredictionData_Client objects used are of our FNetworkPredictionData_Client_ShooterCharacter subclass */
 	virtual class FNetworkPredictionData_Client* GetPredictionData_Client() const override;
 
 };
 
-/*
- */
-
+/* This subclass extends FSavedMove_Character so that it includes and handles data related to the Teleport ability */
 class FSavedMove_ShooterCharacter : public FSavedMove_Character
 {
 public:
 	typedef FSavedMove_Character Super;
 
-	/** These flags are used to replicate teleport via the compressed flags*/
+	/** This flag is used to replicate a Teleport via the compressed flags */
 	bool bPressedTeleport;
 
 	/* Sets the default values for the saved move */
 	virtual void Clear() override;
 
-	/* Packs state data into a set of compressed flags. This is undone above in UpdateFromCompressedFlags */
+	/* Packs state data into a set of compressed flags. This is undone in UpdateFromCompressedFlags */
 	virtual uint8 GetCompressedFlags() const override;
 
-	/* Checks if an old move can be combined with a new move for replication purposes (are they different or the same) */
+	/* Checks if this move can be combined with a new one when replicating and keeping the same results */
 	virtual bool CanCombineWith(const FSavedMovePtr& NewMove, ACharacter* Character, float MaxDelta) const override;
 
 	/* Populates the FSavedMove fields from the corresponding character movement controller variables. This is used when
@@ -64,10 +60,9 @@ public:
 };
 
 /*
- * This subclass of FNetworkPredictionData_Client_Character is used to create new copies of
- * our custom FSavedMove_ShooterCharacter class defined above.
+ * This subclass of FNetworkPredictionData_Client_Character is used to override the AllocateNewMove method,
+ * so that the moves replicated to the server use our FSavedMove_ShooterCharacter class.
  */
-
 class FNetworkPredictionData_Client_ShooterCharacter : public FNetworkPredictionData_Client_Character
 {
 public:

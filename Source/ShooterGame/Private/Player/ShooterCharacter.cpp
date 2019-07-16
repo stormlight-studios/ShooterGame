@@ -1321,7 +1321,7 @@ void AShooterCharacter::BuildPauseReplicationCheckPoints(TArray<FVector>& Releva
 	RelevancyCheckPoints.Add(BoundingBox.Max);
 }
 
-void AShooterCharacter::CheckTeleportinput()
+void AShooterCharacter::AttemptTeleport()
 {
 	if(bPressedTeleport && CanTeleport())
 	{
@@ -1330,10 +1330,13 @@ void AShooterCharacter::CheckTeleportinput()
 	}
 }
 
-/* This function is to add future restriction conditions to our teleport ability */
 bool AShooterCharacter::CanTeleport()
 {
-	//return !bWasTeleporting && !GetCharacterMovement()->IsFalling() example.
-	
 	return !bWasTeleporting;
+
+	/* For now the only restriction is to teleport only once per press of the ability key, more restrictions can be added such as
+	 * blocking the use of the ability while in the air or crouching
+	 *
+	 * return !bWasTeleporting && !GetCharacterMovement()->IsFalling(); example.
+	 */
 }
